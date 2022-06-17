@@ -5,15 +5,89 @@ from prefab import Prefab
 import pygame
 import math
 import os
+import shutil
+import tkinter as tk
+from tkinter import filedialog
 
+
+textures = "textures/"
+
+
+
+# Begin TKinter stuff
+
+tile_size = []
+width = 0
+height = 0
+map_name = "Flatlands"
+
+
+window = tk.Tk()
+
+tile_x_label = tk.Label(text = "Tile Width: ")
+tile_x_entry = tk.Entry()
+tile_x_label.pack()
+tile_x_entry.pack()
+
+tile_y_label = tk.Label(text = "Tile Height: ")
+tile_y_entry = tk.Entry()
+tile_y_label.pack()
+tile_y_entry.pack()
+
+map_x_label = tk.Label(text = "Map Width: ")
+map_x_entry = tk.Entry()
+map_x_label.pack()
+map_x_entry.pack()
+
+map_y_label = tk.Label(text = "Map Height: ")
+map_y_entry = tk.Entry()
+map_y_label.pack()
+map_y_entry.pack()
+
+map_name_label = tk.Label(text = "Map Name: ")
+map_name_entry = tk.Entry()
+map_name_label.pack()
+map_name_entry.pack()
+
+
+
+def begin():
+    global tile_size
+    global width
+    global height
+    global files
+    global map_name
+    tile_size = [int(tile_x_entry.get()), int(tile_y_entry.get())]
+    width = int(map_x_entry.get())
+    height = int(map_y_entry.get())
+    map_name = map_name_entry.get()
+
+    for fname in files:
+        shutil.copy2(fname, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'textures'))
+
+    window.destroy()
+
+files = ()
+
+def uploadAction():
+    global files
+    files = filedialog.askopenfilenames()
+    
+
+flb = tk.Button(window, text="Select Textures", command = uploadAction)
+flb.pack()
+
+b = tk.Button(window, text="Create Map!", command=begin)
+b.pack()
+
+window.mainloop()
+
+
+# --- Wait for all items to be input from TKinter --- #
 pygame.init()
 screen = pygame.display.set_mode((700, 900))
 
-tile_size = [16, 16]
-width = 10
-height = 10
 
-textures = "textures/"
 
 # --- Instantiation Conditions --- #
 
@@ -33,9 +107,9 @@ while len(tiles) < width*height:
     tiles.append(Tile(column * scaled_w, row*scaled_h, scaled_w, scaled_h, 'blank.png', screen))
     column += 1
 
-print(tiles)
-
 # Instantiate the prefabs
+image_locations = {}
+
 gap = 50
 x = 0
 y = 700 + gap
@@ -46,28 +120,56 @@ for file in os.listdir(textures):
         y += gap
     prefabs.append(Prefab(x, y, scaled_w, scaled_h, textures + file, screen))
     x += scaled_w
+    image_locations[textures+file] = ""
 
 # --- Logic For Selecting and Using Tiles --- #
 currentTile = None
+mouseDown = False
 
+def quitGame():
+    for tile in tiles:
+        if tile.image_path != "":
+            position_string = f"[{tile.rect.x},{tile.rect.y}]"
+            image_locations[tile.image_path] += position_string
+
+    map_string = f"{tile_size}\n"
+    for key in image_locations.keys():
+        map_string += "{" + key +"} - " + image_locations[key] + "\n"
+
+    # Create a new folder
+    map_dir = os.path.dirname(os.path.abspath(__file__)) + "/Map - " + map_name
+    os.mkdir(map_dir)
+
+    # Create the map file
+    with open(map_dir + '/map.AGR', 'w') as fp:
+        pass
+
+    fd = os.open(map_dir + '/map.AGR', os.O_RDWR)
+    enc_str = str.encode(map_string)
+
+    num_Bytes = os.write(fd, enc_str)
+
+    pygame.quit()
 
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            pygame.quit()
-        
+            quitGame()
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
-                pygame.quit()
+                quitGame()
             
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:
-                for prefab in prefabs:
-                    if prefab.checkForClick(pygame.mouse.get_pos()):
-                        currentTile = prefab
+                mouseDown = True
+                
             if event.button == 3:
                 currentTile = None
-    
+        
+        if event.type == pygame.MOUSEBUTTONUP:
+            if event.button == 1:
+                mouseDown = False
+
     screen.fill((255,255,255))
 
     for tile in tiles:
@@ -89,6 +191,15 @@ while True:
         currentTileRect.y = pygame.mouse.get_pos()[1] + offset[1]
         screen.blit(currentTileImage, currentTileRect)
 
+
+    if mouseDown:
+        for prefab in prefabs:
+            if prefab.checkForClick(pygame.mouse.get_pos()):
+                currentTile = prefab
+        for tile in tiles:
+            if currentTile != None:
+                if tile.checkForClick(pygame.mouse.get_pos()):
+                    tile.updateTexture(currentTile.image)
 
     pygame.draw.line(screen, (0,0,0), (0, 700), (700, 700), 5)
 

@@ -2,6 +2,7 @@ import pygame
 
 class Prefab:
     def __init__(self, x, y, w, h, texture, screen):
+        self.image = texture
         self.texture = pygame.image.load(texture)
         self.texture = pygame.transform.scale(self.texture, (w, h))
         self.screen = screen
