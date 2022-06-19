@@ -2,7 +2,7 @@
 import pygame
 
 class Tile:
-    def __init__(self, x, y, w, h, texture, screen):
+    def __init__(self, x, y, w, h, c, r, texture, screen):
         self.w = w
         self.h = h
         self.texture = pygame.image.load(texture)
@@ -13,6 +13,9 @@ class Tile:
         self.rect.x = x
         self.rect.y = y
         self.image_path = ""
+
+        self.column = c
+        self.row = r
     def update(self):
         self.screen.blit(self.texture, self.rect)
 

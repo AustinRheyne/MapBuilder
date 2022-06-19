@@ -19,8 +19,9 @@ textures = "textures/"
 tile_size = []
 width = 0
 height = 0
-map_name = "Flatlands"
+map_name = "My Map"
 
+tex_dir = os.path.dirname(os.path.abspath(__file__)) + "/textures/"
 
 window = tk.Tk()
 
@@ -50,7 +51,6 @@ map_name_label.pack()
 map_name_entry.pack()
 
 
-
 def begin():
     global tile_size
     global width
@@ -61,6 +61,8 @@ def begin():
     width = int(map_x_entry.get())
     height = int(map_y_entry.get())
     map_name = map_name_entry.get()
+
+    os.mkdir(tex_dir)
 
     for fname in files:
         shutil.copy2(fname, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'textures'))
@@ -84,6 +86,8 @@ window.mainloop()
 
 
 # --- Wait for all items to be input from TKinter --- #
+
+
 pygame.init()
 screen = pygame.display.set_mode((700, 900))
 
@@ -104,7 +108,7 @@ while len(tiles) < width*height:
     if column == width:
         column = 0
         row += 1
-    tiles.append(Tile(column * scaled_w, row*scaled_h, scaled_w, scaled_h, 'blank.png', screen))
+    tiles.append(Tile(column * scaled_w, row*scaled_h, scaled_w, scaled_h, column, row, 'blank.png', screen))
     column += 1
 
 # Instantiate the prefabs
@@ -129,16 +133,19 @@ mouseDown = False
 def quitGame():
     for tile in tiles:
         if tile.image_path != "":
-            position_string = f"[{tile.rect.x},{tile.rect.y}]"
+            position_string = f"[{tile.column},{tile.row}],"
             image_locations[tile.image_path] += position_string
-
+            
     map_string = f"{tile_size}\n"
     for key in image_locations.keys():
-        map_string += "{" + key +"} - " + image_locations[key] + "\n"
+        map_string += "{" + key +"} - [" + image_locations[key][:-1] + "]\n"
 
     # Create a new folder
     map_dir = os.path.dirname(os.path.abspath(__file__)) + "/Map - " + map_name
     os.mkdir(map_dir)
+
+    # Move the textures into the map folder
+    shutil.move(tex_dir, map_dir)
 
     # Create the map file
     with open(map_dir + '/map.AGR', 'w') as fp:
