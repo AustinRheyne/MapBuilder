@@ -1,4 +1,4 @@
-# MapBuilder
+# Pygame Map Builder v1.0!
 
 Hello! I've created this in an attempt to make pygame a little more accessible to new users as well as making it easier to create the tedious things. This allows someone
 to physically create a map by dragging and droping tiles into place so that no code is nessecary. It is still a massive work in progress however v1.0 is officially out!
