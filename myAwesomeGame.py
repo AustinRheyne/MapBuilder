@@ -3,9 +3,9 @@ import mapBuilderLoader
 
 
 pygame.init()
-screen = pygame.display.set_mode((600, 900))
+screen = pygame.display.set_mode((1280, 1280))
 
-myMapLoader = mapBuilderLoader.MapLoader("Map - Block Breaker", screen)
+myMapLoader = mapBuilderLoader.MapLoader("Map - Sandy", screen)
 
 
 while True:

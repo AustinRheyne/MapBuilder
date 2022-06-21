@@ -1,13 +1,16 @@
-from random import randint, random
-from turtle import pu
-from tile import Tile
-from prefab import Prefab
+
 import pygame
 import math
 import os
 import shutil
 import tkinter as tk
+from random import randint, random
+from turtle import pu
+from tile import Tile
+from prefab import Prefab
 from tkinter import filedialog
+from moveManager import MoveManager
+from fps import FPS
 
 
 textures = "textures/"
@@ -96,21 +99,22 @@ screen = pygame.display.set_mode((700, 900))
 # --- Instantiation Conditions --- #
 
 # Instantiate the tiles
-scaled_w = 700/width
-scaled_h = 700/height
+
+manager = MoveManager()
 
 row = 0
 column = 0
 tiles = []
 prefabs = []
 
+
 while len(tiles) < width*height:
     if column == width:
         column = 0
         row += 1
-    tiles.append(Tile(column * scaled_w, row*scaled_h, scaled_w, scaled_h, column, row, 'blank.png', screen))
+    tiles.append(Tile(column*tile_size[0], row*tile_size[1], tile_size[0], tile_size[1], column, row, 'blank.png', manager, screen))
     column += 1
-
+print(len(tiles))
 # Instantiate the prefabs
 image_locations = {}
 
@@ -119,17 +123,19 @@ x = 0
 y = 700 + gap
 for file in os.listdir(textures):
     x += gap
-    if x + scaled_w > 700-gap:
+    if x + tile_size[0] > 700-gap:
         x = 0
         y += gap
-    prefabs.append(Prefab(x, y, scaled_w, scaled_h, textures + file, screen))
-    x += scaled_w
+    prefabs.append(Prefab(x, y, tile_size[0], tile_size[1], textures + file, screen))
+    x += tile_size[0]
     image_locations[textures+file] = ""
 
 # --- Logic For Selecting and Using Tiles --- #
 currentTile = None
 mouseDown = False
 
+
+fps = FPS()
 def quitGame():
     for tile in tiles:
         if tile.image_path != "":
@@ -158,34 +164,66 @@ def quitGame():
 
     pygame.quit()
 
+
+
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             quitGame()
+
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 quitGame()
-            
+            if event.key == pygame.K_w:
+                manager.up = True
+            if event.key == pygame.K_s:
+                manager.down = True
+            if event.key == pygame.K_a:
+                manager.right = True
+            if event.key == pygame.K_d:
+                manager.left = True
+            if event.key == pygame.K_UP:
+                manager.zoom = True
+            if event.key == pygame.K_DOWN:
+                manager.unzoom = True
+        if event.type == pygame.KEYUP:
+            if event.key == pygame.K_w:
+                manager.up = False
+            if event.key == pygame.K_s:
+                manager.down = False
+            if event.key == pygame.K_a:
+                manager.right = False
+            if event.key == pygame.K_d:
+                manager.left = False
+            if event.key == pygame.K_UP:
+                manager.zoom = False
+            if event.key == pygame.K_DOWN:
+                manager.unzoom = False
+              
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:
                 mouseDown = True
                 
             if event.button == 3:
                 currentTile = None
-        
         if event.type == pygame.MOUSEBUTTONUP:
             if event.button == 1:
                 mouseDown = False
 
-    screen.fill((255,255,255))
+    screen.fill((0,0,0))
+
+    manager.scale_tiles(tiles)
 
     for tile in tiles:
+        tile.translate(manager.move_tiles())
         tile.update()
+
+    pygame.draw.rect(screen, (255, 255, 255), pygame.Rect(0, 700, 700, 200))
 
     for prefab in prefabs:
         prefab.update()
-        
-
+    
+    fps.render(screen)
 
 
     # Draw which tile is currently selected within the screen
@@ -208,6 +246,9 @@ while True:
                 if tile.checkForClick(pygame.mouse.get_pos()):
                     tile.updateTexture(currentTile.image)
 
-    pygame.draw.line(screen, (0,0,0), (0, 700), (700, 700), 5)
+
+
 
     pygame.display.flip()
+    
+    fps.clock.tick(120)
