@@ -31,6 +31,8 @@ class MoveManager:
             self.current_zoom -= self.zoom_speed
         
         if self.zoom or self.unzoom:
+            x_offset = tiles[0].rect.x
+            y_offset = tiles[0].rect.y
             for tile in tiles:
                 tile.scale(self.current_zoom)
-                tile.new_pos((tile.column*(tile.w+self.current_zoom), tile.row*(tile.h+self.current_zoom)))
+                tile.new_pos((tile.column*(tile.w+self.current_zoom)+x_offset, tile.row*(tile.h+self.current_zoom)+y_offset))

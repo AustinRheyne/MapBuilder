@@ -5,7 +5,7 @@ import mapBuilderLoader
 pygame.init()
 screen = pygame.display.set_mode((1280, 1280))
 
-myMapLoader = mapBuilderLoader.MapLoader("Map - Sandy", screen)
+myMapLoader = mapBuilderLoader.MapLoader("Map - Tile Grid", screen)
 
 
 while True:
