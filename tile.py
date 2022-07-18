@@ -17,6 +17,8 @@ class Tile:
         self.rect.x = x
         self.rect.y = y
 
+        self.tag = ""
+
         self.column = c
         self.row = r
 

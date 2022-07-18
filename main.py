@@ -1,4 +1,5 @@
 
+from numpy import may_share_memory
 import pygame
 import math
 import os
@@ -11,6 +12,8 @@ from prefab import Prefab
 from tkinter import filedialog
 from moveManager import MoveManager
 from fps import FPS
+from tag import Tag, TagButton
+from inputField import InputField
 
 
 textures = "textures/"
@@ -115,18 +118,20 @@ while len(tiles) < width*height:
     tiles.append(Tile(column*tile_size[0], row*tile_size[1], tile_size[0], tile_size[1], column, row, 'blank.png', manager, screen))
     column += 1
 print(len(tiles))
-# Instantiate the prefabs
+
+# --- Instantiate the prefabs --- #
 image_locations = {}
 
 gap = 50
 x = 0
 y = 700 + gap
+size = 50
 for file in os.listdir(textures):
     x += gap
     if x + tile_size[0] > 700-gap:
         x = 0
         y += gap
-    prefabs.append(Prefab(x, y, tile_size[0], tile_size[1], textures + file, screen))
+    prefabs.append(Prefab(x, y, size, size, textures + file, screen))
     x += tile_size[0]
     image_locations[textures+file] = ""
 
@@ -134,6 +139,13 @@ for file in os.listdir(textures):
 currentTile = None
 mouseDown = False
 
+# --- Create the tag creator/editor --- #
+
+tagEditor = TagButton(screen, 'plus.png', 674, 866, 16, 16)
+plusText = InputField(screen, (500, 861), (164, 26), (255, 255, 255), (0,0,0), True)
+creatingTag = False
+
+tags = []
 
 fps = FPS()
 def quitGame():
@@ -164,7 +176,9 @@ def quitGame():
 
     pygame.quit()
 
+window = None
 
+myNewAwesomeTag = Tag(500, 500, 200, 200, screen, "DOOR")
 
 while True:
     for event in pygame.event.get():
@@ -174,35 +188,48 @@ while True:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 quitGame()
-            if event.key == pygame.K_w:
-                manager.up = True
-            if event.key == pygame.K_s:
-                manager.down = True
-            if event.key == pygame.K_a:
-                manager.right = True
-            if event.key == pygame.K_d:
-                manager.left = True
-            if event.key == pygame.K_UP:
-                manager.zoom = True
-            if event.key == pygame.K_DOWN:
-                manager.unzoom = True
+
+            if plusText.focused:
+                plusText.updateText(event)
+
+            else:
+                if event.key == pygame.K_w:
+                    manager.up = True
+                if event.key == pygame.K_s:
+                    manager.down = True
+                if event.key == pygame.K_a:
+                    manager.right = True
+                if event.key == pygame.K_d:
+                    manager.left = True
+                if event.key == pygame.K_UP:
+                    manager.zoom = True
+                if event.key == pygame.K_DOWN:
+                    manager.unzoom = True
         if event.type == pygame.KEYUP:
-            if event.key == pygame.K_w:
-                manager.up = False
-            if event.key == pygame.K_s:
-                manager.down = False
-            if event.key == pygame.K_a:
-                manager.right = False
-            if event.key == pygame.K_d:
-                manager.left = False
-            if event.key == pygame.K_UP:
-                manager.zoom = False
-            if event.key == pygame.K_DOWN:
-                manager.unzoom = False
+            if plusText.focused:
+                plusText.updateText(event)
+            else:
+                if event.key == pygame.K_w:
+                    manager.up = False
+                if event.key == pygame.K_s:
+                    manager.down = False
+                if event.key == pygame.K_a:
+                    manager.right = False
+                if event.key == pygame.K_d:
+                    manager.left = False
+                if event.key == pygame.K_UP:
+                    manager.zoom = False
+                if event.key == pygame.K_DOWN:
+                    manager.unzoom = False
               
         if event.type == pygame.MOUSEBUTTONDOWN:
-            if event.button == 1:
-                mouseDown = True
+            if event.button == 1:                            
+                if tagEditor.checkForClick(pygame.mouse.get_pos()):
+                    plusText.change_current_text("")
+
+                elif not plusText.check_focus(pygame.mouse.get_pos()):
+                    mouseDown = True
+
                 
             if event.button == 3:
                 currentTile = None
@@ -223,6 +250,12 @@ while True:
     for prefab in prefabs:
         prefab.update()
     
+    # Run the checks for the tag editor
+    tagEditor.update()
+
+
+    plusText.draw()
+
     fps.render(screen)
 
 
@@ -236,6 +269,7 @@ while True:
         currentTileRect.y = pygame.mouse.get_pos()[1] + offset[1]
         screen.blit(currentTileImage, currentTileRect)
 
+    myNewAwesomeTag.draw()
 
     if mouseDown:
         for prefab in prefabs:
@@ -245,10 +279,10 @@ while True:
             if currentTile != None:
                 if tile.checkForClick(pygame.mouse.get_pos()):
                     tile.updateTexture(currentTile.image)
-
-
-
-
+                
+                if tagEditor.checkForClick(pygame.mouse.get_pos()):
+                    creatingTag = True
+   
     pygame.display.flip()
     
     fps.clock.tick(120)
