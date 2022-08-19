@@ -37,7 +37,8 @@ class Tile:
             # Scale the tag image
             scaled_texture = pygame.transform.scale(self.tagRefrence.texture, (self.w+self.manager.current_zoom, self.h+self.manager.current_zoom))
             # Change the transparency
-            scaled_texture.set_alpha(128)
+            scaled_texture = scaled_texture.convert_alpha()
+            scaled_texture.set_alpha(50)
             # Apply
             self.texture.blit(scaled_texture, (0,0))
         self.screen.blit(self.texture, self.rect)

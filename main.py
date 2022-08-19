@@ -1,12 +1,9 @@
-
-from numpy import may_share_memory
 import pygame
 import math
 import os
 import shutil
 import tkinter as tk
 from random import randint, random
-from turtle import pu
 from tile import Tile
 from prefab import Prefab
 from tkinter import filedialog
@@ -15,6 +12,11 @@ from fps import FPS
 from tag import Tag, TagButton
 from inputField import InputField
 
+
+## -- TODO --
+# Create a tag mode. This adds in the tags, removes the prefabs, and adds in the input field. 
+# Should be fairly simple via a boolean which decides wether or not to draw the given object
+# and can be used to check logic
 
 textures = "textures/"
 
@@ -151,8 +153,11 @@ fps = FPS()
 def quitGame():
     for tile in tiles:
         if tile.image_path != "":
-            position_string = f"[{tile.column},{tile.row}],"
-            image_locations[tile.image_path] += position_string
+            tile_string = f"[{tile.column},{tile.row}"
+            if tile.tag:
+                tile_string += f", \"{tile.tag}\""
+            tile_string += "],"
+            image_locations[tile.image_path] += tile_string
             
     map_string = f"{tile_size}\n"
     for key in image_locations.keys():
@@ -283,18 +288,19 @@ while True:
             if prefab.checkForClick(pygame.mouse.get_pos()):
                 currentTile = prefab
         for tile in tiles:
-            if currentTile != None:
+            if currentTile == None:
+                break
 
-                if currentTile in prefabs:
-                    if tile.checkForClick(pygame.mouse.get_pos()):
-                        tile.updateTexture(currentTile.image)
-                    
-                    if tagEditor.checkForClick(pygame.mouse.get_pos()):
-                        creatingTag = True
-                else:
-                    if tile.checkForClick(pygame.mouse.get_pos()):
-                        tile.tag = currentTile.name
-                        tile.tagRefrence = currentTile
+            if currentTile in prefabs:
+                if tile.checkForClick(pygame.mouse.get_pos()):
+                    tile.updateTexture(currentTile.image)
+                
+                if tagEditor.checkForClick(pygame.mouse.get_pos()):
+                    creatingTag = True
+            else:
+                if tile.checkForClick(pygame.mouse.get_pos()):
+                    tile.tag = currentTile.name
+                    tile.tagRefrence = currentTile
         for tag in tags:
             if tag.checkForClick(pygame.mouse.get_pos()):
                 currentTile = tag
